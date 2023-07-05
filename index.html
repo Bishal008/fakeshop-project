@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fakestoreshopping</title>
+    <link rel="stylesheet" href="../../node_modules/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script>
+        function bodyload(){
+            LoadProducts("http://fakestoreapi.com/products");
+            LoadCategories();
+            GetItemsCount();
+            
+        } 
+         function LoadCategories(){
+            fetch("http://fakestoreapi.com/products/categories")
+            .then(function(res){
+                return res.json();
+            })
+            .then(function(categories){
+                categories.unshift("all");
+                for(var category of categories){
+                    var option=document.createElement("option");
+                    option.text=category.toUpperCase();
+                    option.value=category;
+                    document.getElementById("lstitems").appendChild(option);
+                }
+            })
+         }
+
+        function itemchanged(){
+             var dataname=document.getElementById("lstitems").value;
+            if(dataname=="all"){
+                LoadProducts("http://fakestoreapi.com/products");
+            }
+            else{
+                LoadProducts(`http://fakestoreapi.com/products/category/${dataname}`);
+            }
+        }
+        function LoadProducts(url){
+            document.querySelector("main").innerHTML="";
+            fetch(url)
+            .then(function(res){
+                return res.json();
+            })
+            .then(function(data){
+                for(var product of data){
+                    var div=document.createElement("div");
+                    div.className="card m-2 p-2";
+                    div.style.width="250px";
+                    div.innerHTML=`
+                    <img src=${product.image} height="200px" width="300px" class="card-img-top">
+                    <div class="card-header">
+                        <h3>${product.title}</h3>
+                        </div>
+                        <div class="card-body">
+                            <dl>
+                                <dt>price</dt>
+                                <dd>${product.price}</dd>
+                                <dt>Rating</dt>
+                                <dd><span class="bi bi-star-fill text-warning"></span> ${product.rating.rate}[${product.rating.count}]</dd>
+                                </dl>
+                            </div>
+                            <div class="card-footer">
+                                <button class="btn btn-danger" onclick="Addclick(${product.id})"><span class="bi bi-cart3"></span> Add to cart</button>
+                                </div>
+                    `;
+                    document.querySelector("main").appendChild(div);
+                }
+            })
+        }
+        var cartitem = [];
+        function GetItemsCount(){
+            document.getElementById("lblCount").innerHTML = cartitem.length;
+        }
+        function Addclick(id){
+           fetch(`http://fakestoreapi.com/products/${id}`)
+           .then(function(res){
+              return res.json();
+           })
+           .then(function(data){
+            cartitem.push(data);
+            alert(`${data.title}\n Added to cart`);
+            GetItemsCount();
+           })
+        }
+        function showcart(){
+            document.querySelector("tbody").innerHTML="";
+            for(var product of cartitem){
+                var tr=document.createElement("tr");
+
+                var tdtitle=document.createElement("td");
+                var tdprice=document.createElement("td");
+                var tdphoto=document.createElement("td");
+
+                tdtitle.innerHTML=product.title;
+                tdprice.innerHTML=product.price;
+                tdphoto.innerHTML=`<img src=${product.image} width="50px" height="40px">`;
+
+                tr.appendChild(tdtitle);
+                tr.appendChild(tdprice);
+                tr.appendChild(tdphoto);
+                document.querySelector("tbody").appendChild(tr);
+            }
+        }
+       
+    </script>
+</head>
+<body class="container-fluid" onload="bodyload()">
+      <header>
+         <h2 class="bg-dark text-center text-bg-primary m-2 p-3"><span class="bi bi-cart3"></span>Shopping</h2>
+      </header>
+      <section class="row">
+          <nav class="col-2">
+             <div>
+                <label class="form-label">Select Category</label>
+                <div>
+                    <select onchange="itemchanged()" id="lstitems" class="form-select">
+                   
+                    </select>
+                </div>
+             </div>
+          </nav>
+          <main class="col-8 d-flex flex-wrap overflow-auto" style="height: 500px;">
+            
+          </main>
+          <article class="col-2">
+              <button onclick="showcart()" class="btn btn-warning w-100" data-bs-target="#cart" data-bs-toggle="modal">
+                <span class="bi bi-cart-fill"></span> Buy products  [<span id="lblCount"></span>]</button>
+              <div class="modal" id="cart">
+                 <div class="modal-dialog">
+                   <div class="modal-content">
+                     <div class="modal-header">
+                       <h3>Your cart products</h3>
+                       <button class="btn btn-close" data-bs-dismiss="modal"></button>
+                     </div>
+                     <div class="modal-body">
+                       <table class="table table-hover table-dark">
+                          <thead>
+                             <tr>
+                                <th>Title</th>
+                                <th>Price</th>
+                                <th>Preview</th>
+                             </tr>
+                          </thead>
+                          <tbody>
+                             
+                          </tbody>
+                       </table>
+                     </div>
+                     <div class="modal-footer">
+                        <button class="btn btn-info"  data-bs-dismiss="modal">buy</button>
+                        <button class="btn btn-outline-danger" data-bs-dismiss="modal">Cancle</button>
+                     </div>
+                   </div>
+                 </div>
+              </div>
+          </article>
+      </section>
+
+
+      <script src="../../node_modules/jquery/dist/jquery.js"></script>
+      <script src="../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+  </body>
+</html>
